@@ -2,6 +2,8 @@ package studuumg.wutapp.myfriend;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -13,8 +15,6 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
-import javax.xml.transform.stream.StreamResult;
-
 public class SignUpActivity extends AppCompatActivity {
 
     //Explicit
@@ -24,8 +24,10 @@ public class SignUpActivity extends AppCompatActivity {
     private RadioButton maleRadioButton, femaleRadioButton;
     private ImageView imageView;
     private String nameString, userString, passwordString,
-            rePasswordString, sexString, imageString,imagePathString,imageNameString
-            ;
+            rePasswordString, sexString, imageString,
+            imagePathString, imageNameString;
+    private boolean statusABoolean = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,57 +49,69 @@ public class SignUpActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);  //ลิงค์ไปยังที่เชื่อมสำเร็จ
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
                 startActivityForResult(Intent.createChooser(intent,
-                        "โปรดเลือกรูปภาพ"),1);
+                        "โปรดเลือกรูปภาพ"), 1);
 
-
-
-
-            } //onClick
+            }   // onClick
         });
 
+
     }   // Main Method
+
     @Override
     protected void onActivityResult(int requestCode,
                                     int resultCode,
                                     Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if ((requestCode==1)&&(resultCode==RESULT_OK)){
-            //Result Complete
-            Log.d("MyFriendV1","Result==>ok");
+        if ((requestCode == 1) && (resultCode == RESULT_OK)) {
+            // Result Complete
+            Log.d("MyFriendV1", "Result ==> OK");
 
-            //Find Patgh of image
-            Uri uri  = data.getData();
+            //Find Path of Image
+            Uri uri = data.getData();
             imagePathString = myFindPathImage(uri);
-            Log.d("MyFriendV1","imagePathString ==>" + imagePathString);
-        }//if
+            Log.d("MyFriendV1", "imagePathString ==> " + imagePathString);
 
-    }//onActivityResult
+            //Setup Image to ImageView
+            try {
 
+                Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver()
+                        .openInputStream(uri));
+                imageView.setImageBitmap(bitmap);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }   // try
+
+            statusABoolean = false;
+
+
+        }   // if
+
+    }   // onActivityResult
 
     private String myFindPathImage(Uri uri) {
 
         String strResult = null;
-        String[] strings={MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(uri,strings,
-                null,null,null);
+        String[] strings = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri, strings,
+                null, null, null);
 
-        if(cursor!=null) {
+        if (cursor != null) {
 
             cursor.moveToFirst();
             int intIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             strResult = cursor.getString(intIndex);
 
-
         } else {
             strResult = uri.getPath();
         }
 
-        return strResult;
 
+        return strResult;
     }
 
     public void clickSignUpSign(View view) {
@@ -109,23 +123,40 @@ public class SignUpActivity extends AppCompatActivity {
         rePasswordString = rePasswordEditText.getText().toString().trim();
 
         //Check Space
-        if (nameString.equals("") || userString.equals("")||passwordEditText.equals("")||rePasswordString.equals("")){
-            //have space
-            MyAlert myAlert = new MyAlert(this, R.drawable.doremon48, "มีช่องว่าง", "กรุณากรอกข้อมูล");
+        if (nameString.equals("") || userString.equals("") ||
+                passwordString.equals("") || rePasswordString.equals("")) {
+            //Have Space
+            MyAlert myAlert = new MyAlert(this,
+                    R.drawable.doremon48, "มีช่องว่าง", "กรุณากรอกทุกช่องคะ");
             myAlert.myDialog();
-        } else if (!passwordString.equals(rePasswordString)){
+        } else if (!passwordString.equals(rePasswordString)) {
             // Password not Match
-            MyAlert myAlert = new MyAlert(this,R.drawable.nobita48,"Password ผิด","กรุณาพิมพ์ Password ให้เหมือนกัน");
+            MyAlert myAlert = new MyAlert(this, R.drawable.nobita48,
+                    "Password ผิด", "กรุณาพิมพ์ Password ให้เหมือนกัน");
             myAlert.myDialog();
-        } else if (!(maleRadioButton.isChecked()||femaleRadioButton.isChecked())) {
+        } else if (!(maleRadioButton.isChecked() || femaleRadioButton.isChecked())) {
             // Non Choose Sex
-            MyAlert myAlert=new MyAlert(this,R.drawable.bird48,"ยังไม่เลือกเพศ","กรุณาเลือกเพศ");
+            MyAlert myAlert = new MyAlert(this, R.drawable.bird48,
+                    "ยังไม่เลือก เพศ", "กรุณาเลือกเพศด้วยคะ");
             myAlert.myDialog();
+        } else if (statusABoolean) {
+            MyAlert myAlert = new MyAlert(this, R.drawable.kon48,
+                    "ยังไม่เลือกรูป", "กรุณาเลือกรูป ด้วยคะ");
+            myAlert.myDialog();
+        } else {
+            // Upload Image and Data to Server
+            uploadImageToServer();
+
         }
 
 
-
     }   // clickSign
+
+    private void uploadImageToServer() {
+
+
+
+    }   // uploadImageToServer
 
 
 }   // Main Class
